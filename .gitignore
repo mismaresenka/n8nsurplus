@@ -1,6 +1,6 @@
 # NEVER commit secrets
 .env
-*.env
+
 *.key
 *.pem
 
