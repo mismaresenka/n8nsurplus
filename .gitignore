@@ -1,3 +1,30 @@
+# NEVER commit secrets
 .env
+*.env
+*.key
+*.pem
 
+# Podman/Docker runtime files
+.podman/
+.docker/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor folders
+.vscode/
+.idea/
+
+# Node (if you add any local scripts later)
 node_modules/
+
+# ============================================================
+# WHAT DOES GET COMMITTED:
+#   docker-compose.yml   — infra definition
+#   .env.example         — template (no real values)
+#   workflows/*.json     — exported n8n workflows ✓
+#   GIT_SETUP.sh         — this setup guide
+#   .gitignore           — this file
+# ============================================================

@@ -4,15 +4,19 @@ version: "3.8"
 # A&A Household Appliances Trading — n8n Self-Hosted Setup
 # ============================================================
 # Prerequisites:
-#   - Docker + Docker Compose installed on the host machine
-#   - A domain or subdomain pointed at this server (for HTTPS)
+#   - Docker + Docker Compose / Podman + podman-compose installed
 #   - Port 5678 open in your firewall/router
 #
 # Quick start:
-#   1. Copy this file and the .env.example to your server
-#   2. Fill in every value in .env (rename to .env before running)
-#   3. Run: docker compose up -d
-#   4. Visit https://<your-domain>:5678 to complete setup
+#   1. Copy this file and .env.example to your project folder
+#   2. Fill in every value in .env (rename from .env.example)
+#   3. Run: podman-compose up -d
+#   4. Visit http://localhost:5678 to complete setup
+#
+# Version control:
+#   - Workflows are auto-exported to ./workflows/ every 60s
+#   - Run: git init, git add workflows/, git commit -m "..."
+#   - Commit after every stable workflow checkpoint
 # ============================================================
 
 services:
@@ -20,27 +24,26 @@ services:
   # n8n — workflow automation engine
   # ----------------------------------------------------------
   n8n:
-    image: n8nio/n8n:latest # pin to a specific version in production, e.g. n8nio/n8n:1.45.1
+    image: n8nio/n8n:latest
     container_name: aa_n8n
-    restart: unless-stopped # auto-restarts after server reboots
+    restart: unless-stopped
 
     ports:
-      - "5678:5678" # n8n UI + webhook receiver
+      - "5678:5678"
 
     environment:
       # ---- Core ----
-      - N8N_HOST=${N8N_HOST} # e.g. n8n.yourdomain.com
+      - N8N_HOST=${N8N_HOST}
       - N8N_PORT=5678
-      - N8N_PROTOCOL=${N8N_PROTOCOL:-https} # https recommended; use http only on localhost
-      - WEBHOOK_URL=${WEBHOOK_URL} # full URL n8n uses to build webhook links
-        # e.g. https://n8n.yourdomain.com/
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
+      - WEBHOOK_URL=${WEBHOOK_URL}
 
-      # ---- Auth (basic, single-user) ----
+      # ---- Auth ----
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
       - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
 
-      # ---- Database (Postgres — more reliable than SQLite at scale) ----
+      # ---- Database ----
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=postgres
       - DB_POSTGRESDB_PORT=5432
@@ -48,21 +51,20 @@ services:
       - DB_POSTGRESDB_USER=${POSTGRES_USER}
       - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
 
-      # ---- Encryption (protects stored credentials like API keys) ----
-      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY} # generate with: openssl rand -hex 32
+      # ---- Encryption ----
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
 
       # ---- Timezone ----
-      - GENERIC_TIMEZONE=Asia/Manila # PST / Panabo City
+      - GENERIC_TIMEZONE=Asia/Manila
 
       # ---- Execution settings ----
       - EXECUTIONS_DATA_SAVE_ON_ERROR=all
-      - EXECUTIONS_DATA_SAVE_ON_SUCCESS=last # keeps storage lean; change to 'all' for debugging
+      - EXECUTIONS_DATA_SAVE_ON_SUCCESS=last
       - EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS=true
       - EXECUTIONS_DATA_PRUNE=true
-      - EXECUTIONS_DATA_MAX_AGE=336 # prune executions older than 14 days (hours)
+      - EXECUTIONS_DATA_MAX_AGE=336
 
-      # ---- Email notifications (for workflow error alerts) ----
-      # n8n can send error emails; WhatsApp/Gmail nodes handle operator alerts
+      # ---- Email notifications ----
       - N8N_EMAIL_MODE=smtp
       - N8N_SMTP_HOST=${SMTP_HOST}
       - N8N_SMTP_PORT=${SMTP_PORT:-587}
@@ -70,22 +72,64 @@ services:
       - N8N_SMTP_PASS=${SMTP_PASS}
       - N8N_SMTP_SENDER=${SMTP_SENDER}
 
-      # ---- Disable telemetry (optional) ----
+      # ---- Telemetry off ----
       - N8N_DIAGNOSTICS_ENABLED=false
       - N8N_VERSION_NOTIFICATIONS_ENABLED=false
 
     volumes:
-      - n8n_data:/home/node/.n8n # persists workflows, credentials, settings
+      - n8n_data:/home/node/.n8n
 
     depends_on:
       postgres:
-        condition: service_healthy # waits for Postgres to be ready before starting
+        condition: service_healthy
 
     networks:
       - aa_pipeline
 
   # ----------------------------------------------------------
-  # Postgres — persistent database for n8n workflow storage
+  # n8n-exporter — auto-exports all workflows to ./workflows/
+  # Runs every 60 seconds. Commit that folder to Git.
+  # ----------------------------------------------------------
+  n8n-exporter:
+    image: n8nio/n8n:latest
+    container_name: aa_n8n_exporter
+    restart: unless-stopped
+
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - GENERIC_TIMEZONE=Asia/Manila
+
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./workflows:/backup/workflows # exports land here on your host machine
+
+    entrypoint: >
+      sh -c "
+        echo 'n8n exporter started — exporting every 60s to /backup/workflows/';
+        while true; do
+          n8n export:workflow --all --output=/backup/workflows/ --pretty;
+          echo \"[$(date '+%Y-%m-%d %H:%M:%S')] Workflows exported\";
+          sleep 60;
+        done
+      "
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      n8n:
+        condition: service_started
+
+    networks:
+      - aa_pipeline
+
+  # ----------------------------------------------------------
+  # Postgres — persistent storage for n8n
   # ----------------------------------------------------------
   postgres:
     image: postgres:15-alpine
@@ -110,14 +154,14 @@ services:
       - aa_pipeline
 
 # ----------------------------------------------------------
-# Named volumes — data persists across container restarts
+# Volumes
 # ----------------------------------------------------------
 volumes:
   n8n_data:
   postgres_data:
 
 # ----------------------------------------------------------
-# Internal network — containers talk to each other by name
+# Network
 # ----------------------------------------------------------
 networks:
   aa_pipeline:
