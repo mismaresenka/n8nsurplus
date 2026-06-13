@@ -1,0 +1,578 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"systemInstruction\": {\n    \"parts\": [\n      {\n        \"text\": \"You are the social media caption writer for A&A Household Appliances Trading, a Japan surplus store in Panabo City, Davao Region, Philippines. The brand name is \\\"Japan Surplus\\\" colloquially. You write Facebook post captions only — no other content.\\n\\nBRAND VOICE:\\n- Lead in Bisaya (Cebuano). Use English for specs and technical details. Mix naturally — do not translate everything.\\n- Warm, honest, community-first tone. Write like a trusted neighbour, not a salesperson.\\n- Never claim \\\"brand new.\\\" Never promise delivery, warranty, or installation.\\n- Be honest about condition. Condition vocabulary is fixed: Excellent, Good, Fair, Sold As-Is.\\n- One clear CTA per post. Never stack multiple CTAs.\\n\\nFORMAT RULES:\\n- Post Type A (Product Spotlight): lead with the item name and condition, give 2-3 key specs or selling points, end with \\\"DM to reserve\\\" phrased in Bisaya-led warmth.\\n- Post Type B (Batch Drop): announce the category, hint at variety and volume, end with \\\"DM for prices / inquire now\\\" phrased in Bisaya warmth.\\n- Post Type C (Container Arrival Teaser): build anticipation, do not list prices or specific items, end with \\\"Follow for updates + DM for first access.\\\"\\n- Post Type D (Styled Vignette): describe the grouped items as a lifestyle moment, end with \\\"DM to ask about any piece.\\\"\\n- Caption length: 60-120 words. Never exceed 150 words.\\n- Separate paragraphs with a blank line (two newlines). Aim for 2-3 short paragraphs, not one block.\\n- Emojis: 1-3 max, relevant, not decorative spam.\\n- Hashtags: 3-5 max at the end. Always include #JapanSurplus #PanaboCitySurplus. Add one hashtag matching the category (e.g. #Appliances, #Electronics, #Furniture, #KitchenAndDining, #Collectibles, #Clothing, #Tools, #SportsAndOutdoors, #AutoParts, #MediaAndStationery). Add one category-relevant tag.\\n\\nSPECIFICITY (IMPORTANT):\\n- Be specific and concrete. Use the real attributes given in Specs/Notes and Extra Info. Reference the actual item and its real features.\\n- Avoid generic filler like \\\"perfect for any home,\\\" \\\"great for any occasion,\\\" or \\\"just chilling at home.\\\" These are banned.\\n- If specs are sparse, lean into condition honesty and the Japan-surplus value angle (quality, tested, good find) rather than padding with vague claims.\\n\\nHARD RULES:\\n- Never mention delivery, shipping, or installation.\\n- Never use the word \\\"brand new\\\" or \\\"new\\\" to describe condition.\\n- Never promise anything about warranty or after-sales.\\n- Never make up specs not present in the input data. Only use what is given.\\n- Tested and working status goes in the caption naturally when condition is Excellent or Good. Do not add it for Fair or Sold As-Is.\\n\\nOUTPUT FORMAT (strict):\\nReturn the caption, then a line with exactly |||HERO|||, then the hero line. Nothing else. No markdown, no labels, no quotes.\\n\\nThe hero line must be a CATCHY, scroll-stopping 4-6 word hook in Bisaya or mixed Bisaya-English, ALL CAPS, no punctuation. It must NOT just repeat the item name. Examples of good hero lines: TUNOG NGA NINDOT DIRI · BAGONG ABOT GIKAN JAPAN · KUSINA UPGRADE NIMO DIRI · ABOT NA ANG PINAKANINDOT.\\n\\nExample output shape:\\n<caption text here>\\n|||HERO|||\\nBAGONG ABOT GIKAN JAPAN\"\n      }\n    ]\n  },\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"Item Name: {{ $json.property_item_name }}\\nBrand: {{ $json.property_brand }}\\nCategory: {{ $json.property_category }}\\nCondition: {{ $json.property_condition }}\\nPrice: PHP {{ $json.property_price }}\\nPost Type: {{ $json.property_post_type }}\\nDetails Type: {{ $json.property_details_type }}\\nSpecs / Notes: {{ $json.property_specs_notes }}\\nExtra Info: {{ $json.property_extra_info }}\"\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 0.85,\n    \"maxOutputTokens\": 500\n  }\n}",
+        "options": {
+          "response": {
+            "response": {}
+          },
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        -96
+      ],
+      "id": "cbe78a49-4c26-43b3-8245-0cfb1d06689c",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "mFIejJ2FdzeuO4U5",
+          "name": "Gemini API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b5be9952-8a0e-41c3-a392-5c43d8e76247",
+              "leftValue": "={{ $json.candidates[0].finishReason }}",
+              "rightValue": "STOP",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "494237df-1a43-48e6-b36a-a49b1529f408",
+              "leftValue": "={{ $json['generatedCaption'] }}",
+              "rightValue": "\"\"",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        624,
+        -96
+      ],
+      "id": "3eb52af5-46e4-4e0e-834d-eb96084fa2d1",
+      "name": "Error Catch"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d93e316a-3493-422c-b2be-3a9c1dc97872",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "COMPLETED",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        832,
+        320
+      ],
+      "id": "2f87e877-6508-4ffd-8813-107f6921a260",
+      "name": "If Status = Completed"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Get Many - Ready Items').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Generated Caption|rich_text",
+              "textContent": "={{ $json['generatedCaption'] }}"
+            },
+            {
+              "key": "Status|select",
+              "selectValue": "Approved"
+            },
+            {
+              "key": "Hero Line|rich_text",
+              "textContent": "={{ $json.heroLine }}"
+            },
+            {
+              "key": "Details String|rich_text",
+              "textContent": "={{ $json.detailsString }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1024,
+        -16
+      ],
+      "id": "dbff368b-7259-415c-872c-307be13134ec",
+      "name": "Write generatedCaption",
+      "credentials": {
+        "notionApi": {
+          "id": "uFjbE4U7tPsSpvfJ",
+          "name": "A&A notion"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const registry = {\n  pools: {\n    A: [\n      \"e8deb63a-a5eb-4b1f-a646-284a617a792e\",\n      \"c2d13ff4-1612-4615-846f-21b04e64848f\",\n      \"34de1505-4b99-4a1a-8016-0a3e9aecb6df\",\n      \"0c3f2ee8-e024-43ed-a55b-763281d908e1\",\n      \"06aad9b2-11e4-444e-a120-68ad9d2d0da0\",\n    ],\n    B: [\n      \"ea6e6a0e-b818-4512-ae66-06fe6de764cc\",\n      \"d52c2fb8-a5bb-4996-8eff-9be46c7bff0a\",\n      \"b08393df-243d-4f2d-9acc-6324d065fa85\",\n      \"a322966a-9354-4fef-9671-b420927a41c8\",\n      \"a2ab5e21-546a-40b8-bda1-e60608e7a4cf\",\n      \"4ae04ff7-e0dd-4042-a92d-6f7acd6a93a5\",\n    ],\n    C: [\n      \"c8c4ebcc-372f-457c-bd52-5952e9062faa\",\n      \"fb601d16-728f-49cb-a3af-3f7c234f3de6\",\n      \"6eb086af-2dde-4a1f-9085-390120618777\",\n    ],\n    D: [\n      \"fa7b288c-a695-465e-8bb5-c82bcb6f1158\",\n      \"dd34eba8-8040-45cd-9a3c-3925765cf7cf\",\n      \"d4ee3c79-45e1-41bc-8255-1ebed77ec813\",\n      \"7955d070-5f69-4c89-b072-94c434abba43\",\n      \"65efcfda-1d89-404e-80ed-c01366644596\",\n      \"50a10bff-2b59-4930-a946-536173908113\",\n    ],\n  },\n  templates: {\n    \"e8deb63a-a5eb-4b1f-a646-284a617a792e\": {\n      layers: {\n        itemname: \"item-name\",\n        hero: \"hero\",\n        details: \"item-details\",\n        images: [\"product-image\"],\n      },\n    },\n    \"c2d13ff4-1612-4615-846f-21b04e64848f\": {\n      layers: {\n        itemname: \"item-name\",\n        hero: \"hero-text\",\n        images: [\"product-image\"],\n      },\n    },\n    \"34de1505-4b99-4a1a-8016-0a3e9aecb6df\": {\n      layers: {\n        itemname: \"item-name\",\n        hero: \"hero-subtitle\",\n        images: [\"product-image\"],\n      },\n    },\n    \"0c3f2ee8-e024-43ed-a55b-763281d908e1\": {\n      layers: {\n        itemname: \"item-name\",\n        hero: \"hero-text\",\n        images: [\"product-image\"],\n      },\n    },\n    \"06aad9b2-11e4-444e-a120-68ad9d2d0da0\": {\n      layers: {\n        itemname: \"item-name\",\n        hero: \"hero-text\",\n        images: [\"image-9\"],\n      },\n    },\n    \"ea6e6a0e-b818-4512-ae66-06fe6de764cc\": {\n      layers: {\n        hero: \"hero-text\",\n        details: \"details-text\",\n        images: [\"product-image\"],\n      },\n    },\n    \"d52c2fb8-a5bb-4996-8eff-9be46c7bff0a\": {\n      layers: {\n        hero: \"hero-text\",\n        details: \"details-text\",\n        images: [\"product-image\"],\n      },\n    },\n    \"b08393df-243d-4f2d-9acc-6324d065fa85\": {\n      layers: {\n        hero: \"hero-text\",\n        details: \"details-text\",\n        images: [\"product-image\"],\n      },\n    },\n    \"a322966a-9354-4fef-9671-b420927a41c8\": {\n      layers: {\n        hero: \"hero-title\",\n        details: \"details-text\",\n        images: [\"product-image\"],\n      },\n    },\n    \"a2ab5e21-546a-40b8-bda1-e60608e7a4cf\": {\n      layers: {\n        hero: \"hero-text\",\n        details: \"details-text\",\n        images: [\"product-image\"],\n      },\n    },\n    \"4ae04ff7-e0dd-4042-a92d-6f7acd6a93a5\": {\n      layers: { hero: \"hero\", details: \"details\", images: [\"product-image\"] },\n    },\n    \"c8c4ebcc-372f-457c-bd52-5952e9062faa\": {\n      layers: {\n        hero: \"hero-title\",\n        details: \"product-details\",\n        images: [\"product-image\"],\n      },\n    },\n    \"fb601d16-728f-49cb-a3af-3f7c234f3de6\": {\n      layers: {\n        hero: \"hero\",\n        details: \"details\",\n        images: [\"main-graphic\", \"mockup-image\"],\n      },\n    },\n    \"6eb086af-2dde-4a1f-9085-390120618777\": {\n      layers: {\n        hero: \"hero-text\",\n        details: \"details-text\",\n        images: [\"product-image\"],\n      },\n    },\n    \"fa7b288c-a695-465e-8bb5-c82bcb6f1158\": {\n      layers: {\n        hero: \"hero\",\n        details: \"details\",\n        images: [\"image-1\", \"image-2\"],\n      },\n    },\n    \"dd34eba8-8040-45cd-9a3c-3925765cf7cf\": {\n      layers: {\n        hero: \"hero-text\",\n        details: \"details-text\",\n        images: [\"image-1\", \"image-2\"],\n      },\n    },\n    \"d4ee3c79-45e1-41bc-8255-1ebed77ec813\": {\n      layers: {\n        hero: \"hero\",\n        details: \"details\",\n        images: [\"image-1\", \"image-2\", \"image-3\"],\n      },\n    },\n    \"7955d070-5f69-4c89-b072-94c434abba43\": {\n      layers: {\n        hero: \"hero\",\n        details: \"details\",\n        images: [\"image-1\", \"image-2\"],\n      },\n    },\n    \"65efcfda-1d89-404e-80ed-c01366644596\": {\n      layers: {\n        hero: \"hero-text\",\n        details: \"details-text\",\n        images: [\"image-1\", \"image-2\"],\n      },\n    },\n    \"50a10bff-2b59-4930-a946-536173908113\": {\n      layers: {\n        hero: \"hero-text\",\n        details: \"details-text\",\n        images: [\"image-1\", \"image-2\", \"image-3\"],\n      },\n    },\n  },\n};\n\nconst raw = $input.first().json;\n\nconst item = {\n  id:                 raw.id,\n  \"Item Name\":        raw.property_item_name,\n  \"Post Type\":        raw.property_post_type,\n  \"Template Counter\": raw.property_template_counter,\n  \"Details Type\":     raw.property_details_type,\n  \"Condition\":        raw.property_condition,\n  \"Price\":            raw.property_price,\n  \"Hero Line\":        raw.property_hero_line,\n  \"Details String\":   raw.property_details_string,\n  \"Image 1\":          raw.property_image_1,\n  \"Image 2\":          raw.property_image_2,\n  \"Image 3\":          raw.property_image_3,\n  \"Image 4\":          raw.property_image_4,\n};\n\n// ── Template selection (round-robin) ──────────────────────────────\nconst postType = (item[\"Post Type\"] || \"A\").toString().trim().toUpperCase();\nconst pool = registry.pools[postType] || registry.pools[\"A\"];\n\nconst staticData = $getWorkflowStaticData('global');\nconst counterKey = `templateCounter_${postType}`;\nconst counter = staticData[counterKey] ?? 0;\nconst templateId = pool[counter % pool.length];\nstaticData[counterKey] = counter + 1;           // persists between runs\nconst nextCounter = staticData[counterKey];      // for Notion write-back audit\n\nconst layerMap = registry.templates[templateId].layers;\n\n// ── Details string composer (five-branch switch) ──────────────────\nconst detailsType = item[\"Details Type\"] || \"single_item\";\nconst condition = item[\"Condition\"] || \"\";\nconst price = item[\"Price\"]\n  ? `PHP${Number(item[\"Price\"]).toLocaleString()}`\n  : \"\";\nlet detailsString = \"\";\nswitch (detailsType) {\n  case \"single_item\":\n    detailsString = [condition, price].filter(Boolean).join(\" · \");\n    break;\n  case \"multi_item\":\n    detailsString = \"Multiple pieces · DM for prices\";\n    break;\n  case \"price_range\":\n    detailsString = price ? `Starting ${price}` : \"Starting price — DM to ask\";\n    break;\n  case \"category_drop\":\n    detailsString = \"Fresh arrivals · Stocks vary\";\n    break;\n  case \"arrival_teaser\":\n    detailsString = \"Sorting now · Watch this page\";\n    break;\n}\n\n// ── Image URL extractor (handles Notion file array format) ────────\nfunction extractImageUrl(field) {\n  if (!field) return \"\";\n\n  // Plain string\n  if (typeof field === \"string\") {\n    return field.startsWith(\"http\") ? field : \"\";\n  }\n\n  // Array — n8n Notion gives an array with the URL string at [0]\n  if (Array.isArray(field) && field.length > 0) {\n    const f = field[0];\n    if (typeof f === \"string\") {\n      return f.startsWith(\"http\") ? f : \"\"; // ← this line was missing\n    }\n    return f?.url || f?.file?.url || f?.external?.url || \"\";\n  }\n\n  // Single object\n  if (typeof field === \"object\") {\n    return field.url || field.file?.url || field.external?.url || \"\";\n  }\n\n  return \"\";\n}\nconst imageUrls = [\"Image 1\", \"Image 2\", \"Image 3\", \"Image 4\"]\n  .map((f) => extractImageUrl(item[f]))\n  .filter((u) => u.length > 0);\n// TEMPORARY DEBUG — remove after\n// console.log(\"Image 1 raw:\", JSON.stringify(item[\"Image 1\"]));\n// console.log(\"Extracted URLs:\", JSON.stringify(imageUrls));\n\n// ── Build Templated layers payload ────────────────────────────────\nconst layers = {};\nif (layerMap.itemname && item[\"Item Name\"]) {\n  layers[layerMap.itemname] = { text: item[\"Item Name\"] };\n}\nif (layerMap.hero && item[\"Hero Line\"]) {\n  layers[layerMap.hero] = { text: item[\"Hero Line\"] };\n}\nif (layerMap.details && detailsString) {\n  layers[layerMap.details] = { text: detailsString };\n}\nlayerMap.images.forEach((slotName, i) => {\n  if (imageUrls[i]) {\n    layers[slotName] = { image_url: imageUrls[i] };\n  } else {\n    layers[slotName] = { hide: true };\n  }\n});\n\nreturn [\n  {\n    json: {\n      notionPageId: item.id,\n      templateId,\n      nextCounter,\n      postType,\n      detailsString,\n      layers,\n      itemName: item[\"Item Name\"] || \"\",\n      renderName: `AA_${postType}_${(item.id || \"item\").slice(0, 8)}`,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        320
+      ],
+      "id": "37fe5b90-7462-4db7-a566-b232907ff6f5",
+      "name": "Code - template selector"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.templated.io/v1/render",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"template\": \"{{ $json.templateId }}\",\n  \"format\": \"jpg\",\n  \"name\": \"{{ $json.renderName }}\",\n  \"layers\": {{ JSON.stringify($json.layers) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        624,
+        320
+      ],
+      "id": "2724b916-57c7-408f-8304-557c0955e97f",
+      "name": "HTTP — Templated render",
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "0bvVBAJH8RYwOjk9",
+          "name": "Templated API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "8511491097",
+        "text": "✅ Pubmat ready — Format {{ $('Code - template selector').item.json.postType }}  🖼 {{ $('Code - template selector').item.json.itemName }} 📋 {{ $('Code - template selector').item.json.detailsString }}  Preview: {{ $('HTTP — Templated render').item.json.render_url }}  Notion updated → Status: Posted",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1328,
+        224
+      ],
+      "id": "447424f7-8a23-4e1e-be4b-cbac14395344",
+      "name": "Telegram — success notify",
+      "webhookId": "ecbef67e-c4ba-4ac7-abdf-480a3461d3b6",
+      "credentials": {
+        "telegramApi": {
+          "id": "im9kgJFo30rQ00UI",
+          "name": "A&A Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Code - template selector').item.json.notionPageId }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Design Link|url",
+              "urlValue": "={{ $('HTTP — Templated render').item.json.render_url }}"
+            },
+            {
+              "key": "Details String|rich_text",
+              "textContent": "={{ $('Code - template selector').item.json.detailsString }}"
+            },
+            {
+              "key": "Template Counter|number",
+              "numberValue": "={{ $('Code - template selector').item.json.nextCounter }}"
+            },
+            {
+              "key": "Status|select",
+              "selectValue": "Posted"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        224
+      ],
+      "id": "e9476dac-b86e-472b-b9d0-5093e6057cd7",
+      "name": "Notion — write render URL",
+      "credentials": {
+        "notionApi": {
+          "id": "uFjbE4U7tPsSpvfJ",
+          "name": "A&A notion"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.candidates[0].content.parts[0].text;\n\n// Split on the delimiter\nconst parts = raw.split(\"|||HERO|||\");\nconst caption = (parts[0] || \"\").trim();\nconst hero   = (parts[1] || \"\").trim();\n\n// ── Get Notion data from Get Many node (new key format) ──────────\nconst notionRaw = $('Get Many - Ready Items').first().json;\n// (replace 'Get Many - Ready Items' with whatever you named that node)\n\nconst detailsType = notionRaw.property_details_type || \"single_item\";\nconst condition   = notionRaw.property_condition    || \"\";\nconst price       = notionRaw.property_price\n  ? `PHP ${Number(notionRaw.property_price).toLocaleString()}`\n  : \"\";\n\n// ── Details string composer ───────────────────────────────────────\nlet detailsString = \"\";\nswitch (detailsType) {\n  case \"single_item\":\n    detailsString = [condition, price].filter(Boolean).join(\" · \");\n    break;\n  case \"multi_item\":\n    detailsString = \"Multiple pieces · DM for prices\";\n    break;\n  case \"price_range\":\n    detailsString = price ? `Starting ${price}` : \"Starting price — DM to ask\";\n    break;\n  case \"category_drop\":\n    detailsString = \"Fresh arrivals · Stocks vary\";\n    break;\n  case \"arrival_teaser\":\n    detailsString = \"Sorting now · Watch this page\";\n    break;\n}\n\nreturn [{\n  json: {\n    generatedCaption: caption,\n    heroLine:         hero,\n    detailsString:    detailsString,\n    notionPageId:     notionRaw.id,  // carry the page ID forward for write-back\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        -16
+      ],
+      "id": "d22a337e-ae8c-47bf-9c40-83c70de5790e",
+      "name": "Parse Gemini response"
+    },
+    {
+      "parameters": {
+        "chatId": "8511491097",
+        "text": "⚠️ Caption generation FAILED  📦 Item: {{ $('Notion Trigger').item.json['Item Name'] }} �gen Reason: {{ $('HTTP Request').item.json.candidates[0].finishReason }}  The row was not updated. Please check manually in Notion: {{ $('Notion Trigger').item.json.url }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        832,
+        -176
+      ],
+      "id": "4908cacc-3d15-4e0d-884b-d0092fb68697",
+      "name": "Telegram — error notify",
+      "webhookId": "ecbef67e-c4ba-4ac7-abdf-480a3461d3b6",
+      "credentials": {
+        "telegramApi": {
+          "id": "im9kgJFo30rQ00UI",
+          "name": "A&A Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        -96
+      ],
+      "id": "4b2d61f8-a9e3-46b8-8547-af1efcbe9f38",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        320
+      ],
+      "id": "d87e69b6-303d-461b-aa20-3bef89537d69",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "f2388a35-b7a0-41e3-a4ee-89836a158d56",
+          "mode": "list",
+          "cachedResultName": "A&A Products — Inventory & Pipeline",
+          "cachedResultUrl": "https://app.notion.com/p/f2388a35b7a041e3a4ee89836a158d56"
+        },
+        "returnAll": true,
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Status|select",
+              "condition": "equals",
+              "selectValue": "Approved"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        192,
+        320
+      ],
+      "id": "b320562c-b9da-4419-b755-315ddc1c368e",
+      "name": "Trigger after generatedCaption",
+      "credentials": {
+        "notionApi": {
+          "id": "uFjbE4U7tPsSpvfJ",
+          "name": "A&A notion"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "f2388a35-b7a0-41e3-a4ee-89836a158d56",
+          "mode": "list",
+          "cachedResultName": "A&A Products — Inventory & Pipeline",
+          "cachedResultUrl": "https://app.notion.com/p/f2388a35b7a041e3a4ee89836a158d56"
+        },
+        "returnAll": true,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Status|select",
+              "condition": "equals",
+              "selectValue": "Ready"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        192,
+        -96
+      ],
+      "id": "5620a17b-affe-407f-a96b-a81625673db6",
+      "name": "Get Many - Ready Items",
+      "credentials": {
+        "notionApi": {
+          "id": "uFjbE4U7tPsSpvfJ",
+          "name": "A&A notion"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Error Catch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Catch": {
+      "main": [
+        [
+          {
+            "node": "Telegram — error notify",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Gemini response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Status = Completed": {
+      "main": [
+        [
+          {
+            "node": "Notion — write render URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write generatedCaption": {
+      "main": [
+        []
+      ]
+    },
+    "Code - template selector": {
+      "main": [
+        [
+          {
+            "node": "HTTP — Templated render",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP — Templated render": {
+      "main": [
+        [
+          {
+            "node": "If Status = Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notion — write render URL": {
+      "main": [
+        []
+      ]
+    },
+    "Parse Gemini response": {
+      "main": [
+        [
+          {
+            "node": "Write generatedCaption",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Many - Ready Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Trigger after generatedCaption",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger after generatedCaption": {
+      "main": [
+        [
+          {
+            "node": "Code - template selector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Many - Ready Items": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a868c153-4a25-4458-bec1-2aed91913201",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "341e7bae55fa5e7de0ff7294b82ef69a1c3dca01d88eee9129d90c82da872338"
+  },
+  "nodeGroups": [],
+  "id": "alVXR3AroTPyawpH",
+  "tags": []
+}
