@@ -1,0 +1,1349 @@
+{
+  "name": "A&A workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"systemInstruction\": {\n    \"parts\": [\n      {\n        \"text\": \"You are the social media caption writer for A&A Household Appliances Trading, a Japan surplus store in Panabo City, Davao Region, Philippines. The brand name is \\\"Japan Surplus\\\" colloquially. You write Facebook post captions only — no other content.\\n\\nBRAND VOICE:\\n- Lead in Bisaya (Cebuano). Use English for specs and technical details. Mix naturally — do not translate everything.\\n- Warm, honest, community-first tone. Write like a trusted neighbour, not a salesperson.\\n- Never claim \\\"brand new.\\\" Never promise delivery, warranty, or installation.\\n- Be honest about condition. Condition vocabulary is fixed: Excellent, Good, Fair, Sold As-Is.\\n- One clear CTA per post. Never stack multiple CTAs.\\n\\nFORMAT RULES:\\n- Post Type A (Product Spotlight): lead with the item name and condition, give 2-3 key specs or selling points, end with \\\"DM to reserve\\\" phrased in Bisaya-led warmth.\\n- Post Type B (Batch Drop): announce the category, hint at variety and volume, end with \\\"DM for prices / inquire now\\\" phrased in Bisaya warmth.\\n- Post Type C (Container Arrival Teaser): build anticipation, do not list prices or specific items, end with \\\"Follow for updates + DM for first access.\\\"\\n- Post Type D (Styled Vignette): describe the grouped items as a lifestyle moment, end with \\\"DM to ask about any piece.\\\"\\n- Caption length: 60-120 words. Never exceed 150 words.\\n- Separate paragraphs with a blank line (two newlines). Aim for 2-3 short paragraphs, not one block.\\n- Emojis: 1-3 max, relevant, not decorative spam.\\n- Hashtags: 3-5 max at the end. Always include #JapanSurplus #PanaboCitySurplus. Add one hashtag matching the category (e.g. #Appliances, #Electronics, #Furniture, #KitchenAndDining, #Collectibles, #Clothing, #Tools, #SportsAndOutdoors, #AutoParts, #MediaAndStationery). Add one category-relevant tag.\\n\\nSPECIFICITY (IMPORTANT):\\n- Be specific and concrete. Use the real attributes given in Specs/Notes and Extra Info. Reference the actual item and its real features.\\n- Avoid generic filler like \\\"perfect for any home,\\\" \\\"great for any occasion,\\\" or \\\"just chilling at home.\\\" These are banned.\\n- If specs are sparse, lean into condition honesty and the Japan-surplus value angle (quality, tested, good find) rather than padding with vague claims.\\n\\nHARD RULES:\\n- Never mention delivery, shipping, or installation.\\n- Never use the word \\\"brand new\\\" or \\\"new\\\" to describe condition.\\n- Never promise anything about warranty or after-sales.\\n- Never make up specs not present in the input data. Only use what is given.\\n- Tested and working status goes in the caption naturally when condition is Excellent or Good. Do not add it for Fair or Sold As-Is.\\n\\nOUTPUT FORMAT (strict):\\nReturn the caption, then a line with exactly |||HERO|||, then the hero line. Nothing else. No markdown, no labels, no quotes.\\n\\nThe hero line must be a CATCHY, scroll-stopping 4-6 word hook in Bisaya or mixed Bisaya-English, ALL CAPS, no punctuation. It must NOT just repeat the item name. Examples of good hero lines: TUNOG NGA NINDOT DIRI · BAGONG ABOT GIKAN JAPAN · KUSINA UPGRADE NIMO DIRI · ABOT NA ANG PINAKANINDOT.\\n\\nExample output shape:\\n<caption text here>\\n|||HERO|||\\nBAGONG ABOT GIKAN JAPAN\"\n      }\n    ]\n  },\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"Item Name: {{ $json.property_item_name }}\\nBrand: {{ $json.property_brand }}\\nCategory: {{ $json.property_category }}\\nCondition: {{ $json.property_condition }}\\nPrice: PHP {{ $json.property_price }}\\nPost Type: {{ $json.property_post_type }}\\nDetails Type: {{ $json.property_details_type }}\\nSpecs / Notes: {{ $json.property_specs_notes }}\\nExtra Info: {{ $json.property_extra_info }}\"\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 0.85,\n    \"maxOutputTokens\": 500\n  }\n}",
+        "options": {
+          "response": {
+            "response": {}
+          },
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        176,
+        -208
+      ],
+      "id": "5decbecf-e51e-48ff-91c7-8fe32c025db6",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "YNF6uZB2EZwCZmWB",
+          "name": "Gemini API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b5be9952-8a0e-41c3-a392-5c43d8e76247",
+              "leftValue": "={{ $json.choices[0].message.content.length }}",
+              "rightValue": 100,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            },
+            {
+              "id": "36c66d3f-fee6-4c49-adda-3a95859213d9",
+              "leftValue": "={{ $json.choices[0].message.content.includes('|||HERO|||') }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -208,
+        80
+      ],
+      "id": "5f04ee1a-40e8-4aed-80d4-9b1c00158047",
+      "name": "Error Catch"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d93e316a-3493-422c-b2be-3a9c1dc97872",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "COMPLETED",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        496
+      ],
+      "id": "64bb8795-6240-40c7-b487-5d7e86e3ac18",
+      "name": "If Status = Completed"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Get Many - Ready Items').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Generated Caption|rich_text",
+              "textContent": "={{ $json['generatedCaption'] }}"
+            },
+            {
+              "key": "Status|select",
+              "selectValue": "Approved"
+            },
+            {
+              "key": "Hero Line|rich_text",
+              "textContent": "={{ $json.heroLine }}"
+            },
+            {
+              "key": "Details String|rich_text",
+              "textContent": "={{ $json.detailsString }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        192,
+        160
+      ],
+      "id": "4bb5d421-754e-43d9-8635-d14b4d9d915a",
+      "name": "Write generatedCaption",
+      "credentials": {
+        "notionApi": {
+          "id": "AWqFTDnuIu4yzlaH",
+          "name": "A&A Notion"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const registry = {\n  pools: {\n    A: [\n      \"e8deb63a-a5eb-4b1f-a646-284a617a792e\",\n      \"c2d13ff4-1612-4615-846f-21b04e64848f\",\n      \"34de1505-4b99-4a1a-8016-0a3e9aecb6df\",\n      \"0c3f2ee8-e024-43ed-a55b-763281d908e1\",\n      \"06aad9b2-11e4-444e-a120-68ad9d2d0da0\",\n    ],\n    B: [\n      \"ea6e6a0e-b818-4512-ae66-06fe6de764cc\",\n      \"d52c2fb8-a5bb-4996-8eff-9be46c7bff0a\",\n      \"b08393df-243d-4f2d-9acc-6324d065fa85\",\n      \"a322966a-9354-4fef-9671-b420927a41c8\",\n      \"a2ab5e21-546a-40b8-bda1-e60608e7a4cf\",\n      \"4ae04ff7-e0dd-4042-a92d-6f7acd6a93a5\",\n    ],\n    C: [\n      \"c8c4ebcc-372f-457c-bd52-5952e9062faa\",\n      \"fb601d16-728f-49cb-a3af-3f7c234f3de6\",\n      \"6eb086af-2dde-4a1f-9085-390120618777\",\n    ],\n    D: [\n      \"fa7b288c-a695-465e-8bb5-c82bcb6f1158\",\n      \"dd34eba8-8040-45cd-9a3c-3925765cf7cf\",\n      \"d4ee3c79-45e1-41bc-8255-1ebed77ec813\",\n      \"7955d070-5f69-4c89-b072-94c434abba43\",\n      \"65efcfda-1d89-404e-80ed-c01366644596\",\n      \"50a10bff-2b59-4930-a946-536173908113\",\n    ],\n  },\n  templates: {\n    \"e8deb63a-a5eb-4b1f-a646-284a617a792e\": {\n      layers: {\n        itemname: \"item-name\",\n        hero: \"hero\",\n        details: \"item-details\",\n        images: [\"product-image\"],\n      },\n    },\n    \"c2d13ff4-1612-4615-846f-21b04e64848f\": {\n      layers: {\n        itemname: \"item-name\",\n        hero: \"hero-text\",\n        images: [\"product-image\"],\n      },\n    },\n    \"34de1505-4b99-4a1a-8016-0a3e9aecb6df\": {\n      layers: {\n        itemname: \"item-name\",\n        hero: \"hero-subtitle\",\n        images: [\"product-image\"],\n      },\n    },\n    \"0c3f2ee8-e024-43ed-a55b-763281d908e1\": {\n      layers: {\n        itemname: \"item-name\",\n        hero: \"hero-text\",\n        images: [\"product-image\"],\n      },\n    },\n    \"06aad9b2-11e4-444e-a120-68ad9d2d0da0\": {\n      layers: {\n        itemname: \"item-name\",\n        hero: \"hero-text\",\n        images: [\"image-9\"],\n      },\n    },\n    \"ea6e6a0e-b818-4512-ae66-06fe6de764cc\": {\n      layers: {\n        hero: \"hero-text\",\n        details: \"details-text\",\n        images: [\"product-image\"],\n      },\n    },\n    \"d52c2fb8-a5bb-4996-8eff-9be46c7bff0a\": {\n      layers: {\n        hero: \"hero-text\",\n        details: \"details-text\",\n        images: [\"product-image\"],\n      },\n    },\n    \"b08393df-243d-4f2d-9acc-6324d065fa85\": {\n      layers: {\n        hero: \"hero-text\",\n        details: \"details-text\",\n        images: [\"product-image\"],\n      },\n    },\n    \"a322966a-9354-4fef-9671-b420927a41c8\": {\n      layers: {\n        hero: \"hero-title\",\n        details: \"details-text\",\n        images: [\"product-image\"],\n      },\n    },\n    \"a2ab5e21-546a-40b8-bda1-e60608e7a4cf\": {\n      layers: {\n        hero: \"hero-text\",\n        details: \"details-text\",\n        images: [\"product-image\"],\n      },\n    },\n    \"4ae04ff7-e0dd-4042-a92d-6f7acd6a93a5\": {\n      layers: { hero: \"hero\", details: \"details\", images: [\"product-image\"] },\n    },\n    \"c8c4ebcc-372f-457c-bd52-5952e9062faa\": {\n      layers: {\n        hero: \"hero-title\",\n        details: \"product-details\",\n        images: [\"product-image\"],\n      },\n    },\n    \"fb601d16-728f-49cb-a3af-3f7c234f3de6\": {\n      layers: {\n        hero: \"hero\",\n        details: \"details\",\n        images: [\"main-graphic\", \"mockup-image\"],\n      },\n    },\n    \"6eb086af-2dde-4a1f-9085-390120618777\": {\n      layers: {\n        hero: \"hero-text\",\n        details: \"details-text\",\n        images: [\"product-image\"],\n      },\n    },\n    \"fa7b288c-a695-465e-8bb5-c82bcb6f1158\": {\n      layers: {\n        hero: \"hero\",\n        details: \"details\",\n        images: [\"image-1\", \"image-2\"],\n      },\n    },\n    \"dd34eba8-8040-45cd-9a3c-3925765cf7cf\": {\n      layers: {\n        hero: \"hero-text\",\n        details: \"details-text\",\n        images: [\"image-1\", \"image-2\"],\n      },\n    },\n    \"d4ee3c79-45e1-41bc-8255-1ebed77ec813\": {\n      layers: {\n        hero: \"hero\",\n        details: \"details\",\n        images: [\"image-1\", \"image-2\", \"image-3\"],\n      },\n    },\n    \"7955d070-5f69-4c89-b072-94c434abba43\": {\n      layers: {\n        hero: \"hero\",\n        details: \"details\",\n        images: [\"image-1\", \"image-2\"],\n      },\n    },\n    \"65efcfda-1d89-404e-80ed-c01366644596\": {\n      layers: {\n        hero: \"hero-text\",\n        details: \"details-text\",\n        images: [\"image-1\", \"image-2\"],\n      },\n    },\n    \"50a10bff-2b59-4930-a946-536173908113\": {\n      layers: {\n        hero: \"hero-text\",\n        details: \"details-text\",\n        images: [\"image-1\", \"image-2\", \"image-3\"],\n      },\n    },\n  },\n};\n\nconst raw = $input.first().json;\n\nconst item = {\n  id:                 raw.id,\n  \"Item Name\":        raw.property_item_name,\n  \"Post Type\":        raw.property_post_type,\n  \"Template Counter\": raw.property_template_counter,\n  \"Details Type\":     raw.property_details_type,\n  \"Condition\":        raw.property_condition,\n  \"Price\":            raw.property_price,\n  \"Hero Line\":        raw.property_hero_line,\n  \"Details String\":   raw.property_details_string,\n  \"Image 1\":          raw.property_image_1,\n  \"Image 2\":          raw.property_image_2,\n  \"Image 3\":          raw.property_image_3,\n  \"Image 4\":          raw.property_image_4,\n};\n\n// ── Template selection (round-robin) ──────────────────────────────\nconst postType = (item[\"Post Type\"] || \"A\").toString().trim().toUpperCase();\nconst pool = registry.pools[postType] || registry.pools[\"A\"];\n\nconst staticData = $getWorkflowStaticData('global');\nconst counterKey = `templateCounter_${postType}`;\nconst counter = staticData[counterKey] ?? 0;\nconst templateId = pool[counter % pool.length];\nstaticData[counterKey] = counter + 1;           // persists between runs\nconst nextCounter = staticData[counterKey];      // for Notion write-back audit\n\nconst layerMap = registry.templates[templateId].layers;\n\n// ── Details string composer (five-branch switch) ──────────────────\nconst detailsType = item[\"Details Type\"] || \"single_item\";\nconst condition = item[\"Condition\"] || \"\";\nconst price = item[\"Price\"]\n  ? `PHP${Number(item[\"Price\"]).toLocaleString()}`\n  : \"\";\nlet detailsString = \"\";\nswitch (detailsType) {\n  case \"single_item\":\n    detailsString = [condition, price].filter(Boolean).join(\" · \");\n    break;\n  case \"multi_item\":\n    detailsString = \"Multiple pieces · DM for prices\";\n    break;\n  case \"price_range\":\n    detailsString = price ? `Starting ${price}` : \"Starting price — DM to ask\";\n    break;\n  case \"category_drop\":\n    detailsString = \"Fresh arrivals · Stocks vary\";\n    break;\n  case \"arrival_teaser\":\n    detailsString = \"Sorting now · Watch this page\";\n    break;\n}\n\n// ── Image URL extractor (handles Notion file array format) ────────\nfunction extractImageUrl(field) {\n  if (!field) return \"\";\n\n  // Plain string\n  if (typeof field === \"string\") {\n    return field.startsWith(\"http\") ? field : \"\";\n  }\n\n  // Array — n8n Notion gives an array with the URL string at [0]\n  if (Array.isArray(field) && field.length > 0) {\n    const f = field[0];\n    if (typeof f === \"string\") {\n      return f.startsWith(\"http\") ? f : \"\"; // ← this line was missing\n    }\n    return f?.url || f?.file?.url || f?.external?.url || \"\";\n  }\n\n  // Single object\n  if (typeof field === \"object\") {\n    return field.url || field.file?.url || field.external?.url || \"\";\n  }\n\n  return \"\";\n}\nconst imageUrls = [\"Image 1\", \"Image 2\", \"Image 3\", \"Image 4\"]\n  .map((f) => extractImageUrl(item[f]))\n  .filter((u) => u.length > 0);\n// TEMPORARY DEBUG — remove after\n// console.log(\"Image 1 raw:\", JSON.stringify(item[\"Image 1\"]));\n// console.log(\"Extracted URLs:\", JSON.stringify(imageUrls));\n\n// ── Build Templated layers payload ────────────────────────────────\nconst layers = {};\nif (layerMap.itemname && item[\"Item Name\"]) {\n  layers[layerMap.itemname] = { text: item[\"Item Name\"] };\n}\nif (layerMap.hero && item[\"Hero Line\"]) {\n  layers[layerMap.hero] = { text: item[\"Hero Line\"] };\n}\nif (layerMap.details && detailsString) {\n  layers[layerMap.details] = { text: detailsString };\n}\nlayerMap.images.forEach((slotName, i) => {\n  if (imageUrls[i]) {\n    layers[slotName] = { image_url: imageUrls[i] };\n  } else {\n    layers[slotName] = { hide: true };\n  }\n});\n\nreturn [\n  {\n    json: {\n      notionPageId: item.id,\n      templateId,\n      nextCounter,\n      postType,\n      detailsString,\n      layers,\n      itemName: item[\"Item Name\"] || \"\",\n      renderName: `AA_${postType}_${(item.id || \"item\").slice(0, 8)}`,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        496
+      ],
+      "id": "119d8737-39e8-4330-bfbf-93031bbd7def",
+      "name": "Code - template selector"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.templated.io/v1/render",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"template\": \"{{ $json.templateId }}\",\n  \"format\": \"jpg\",\n  \"name\": \"{{ $json.renderName }}\",\n  \"layers\": {{ JSON.stringify($json.layers) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -208,
+        496
+      ],
+      "id": "1195160a-a9c9-4531-8180-5e0a3e3d5ff4",
+      "name": "HTTP — Templated render",
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "s47Z8m9KuYIYS71s",
+          "name": "Templated API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "8511491097",
+        "text": "✅ Pubmat ready — Format {{ $('Code - template selector').item.json.postType }}  🖼 {{ $('Code - template selector').item.json.itemName }} 📋 {{ $('Code - template selector').item.json.detailsString }}  Preview: {{ $('HTTP — Templated render').item.json.render_url }}  Notion updated → Status: Posted",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        496,
+        400
+      ],
+      "id": "7e582da1-b8dd-4034-8bd1-e6dd51e52d12",
+      "name": "Telegram — success notify",
+      "webhookId": "ecbef67e-c4ba-4ac7-abdf-480a3461d3b6",
+      "credentials": {
+        "telegramApi": {
+          "id": "dTtDsjQJJUrjJlYb",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Code - template selector').item.json.notionPageId }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Design Link|url",
+              "urlValue": "={{ $('HTTP — Templated render').item.json.render_url }}"
+            },
+            {
+              "key": "Details String|rich_text",
+              "textContent": "={{ $('Code - template selector').item.json.detailsString }}"
+            },
+            {
+              "key": "Template Counter|number",
+              "numberValue": "={{ $('Code - template selector').item.json.nextCounter }}"
+            },
+            {
+              "key": "Status|select",
+              "selectValue": "Posted"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        400
+      ],
+      "id": "111d5bff-64be-40a6-abfb-827654b08fbd",
+      "name": "Notion — write render URL",
+      "credentials": {
+        "notionApi": {
+          "id": "AWqFTDnuIu4yzlaH",
+          "name": "A&A Notion"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.choices[0].message.content;\n\n// Split on the delimiter\nconst parts = raw.split(\"|||HERO|||\");\nconst caption = (parts[0] || \"\").trim();\nconst hero   = (parts[1] || \"\").trim();\n\n// ── Get Notion data from Get Many node (new key format) ──────────\nconst notionRaw = $('Get Many - Ready Items').first().json;\n// (replace 'Get Many - Ready Items' with whatever you named that node)\n\nconst detailsType = notionRaw.property_details_type || \"single_item\";\nconst condition   = notionRaw.property_condition    || \"\";\nconst price       = notionRaw.property_price\n  ? `PHP ${Number(notionRaw.property_price).toLocaleString()}`\n  : \"\";\n\n// ── Details string composer ───────────────────────────────────────\nlet detailsString = \"\";\nswitch (detailsType) {\n  case \"single_item\":\n    detailsString = [condition, price].filter(Boolean).join(\" · \");\n    break;\n  case \"multi_item\":\n    detailsString = \"Multiple pieces · DM for prices\";\n    break;\n  case \"price_range\":\n    detailsString = price ? `Starting ${price}` : \"Starting price — DM to ask\";\n    break;\n  case \"category_drop\":\n    detailsString = \"Fresh arrivals · Stocks vary\";\n    break;\n  case \"arrival_teaser\":\n    detailsString = \"Sorting now · Watch this page\";\n    break;\n}\n\nreturn [{\n  json: {\n    generatedCaption: caption,\n    heroLine:         hero,\n    detailsString:    detailsString,\n    notionPageId:     notionRaw.id,  // carry the page ID forward for write-back\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        160
+      ],
+      "id": "d66c7bc9-a861-4617-8fa2-81991ad9278b",
+      "name": "Parse Gemini response"
+    },
+    {
+      "parameters": {
+        "chatId": "8511491097",
+        "text": "⚠️ Caption generation FAILED  📦 Item: {{ $('Notion Trigger').item.json['Item Name'] }} �gen Reason: {{ $('HTTP Request').item.json.candidates[0].finishReason }}  The row was not updated. Please check manually in Notion: {{ $('Notion Trigger').item.json.url }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4d91831e-deef-4f26-a78e-876e17ce4d82",
+      "name": "Telegram — error notify",
+      "webhookId": "ecbef67e-c4ba-4ac7-abdf-480a3461d3b6",
+      "credentials": {
+        "telegramApi": {
+          "id": "dTtDsjQJJUrjJlYb",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -832,
+        80
+      ],
+      "id": "89268125-0cfd-4127-9857-2724b13380e9",
+      "name": "Schedule Trigger",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -992,
+        496
+      ],
+      "id": "5354cb28-18c3-41ce-8d67-a36b2feb9fc3",
+      "name": "Schedule Trigger1",
+      "retryOnFail": true,
+      "executeOnce": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "f2388a35-b7a0-41e3-a4ee-89836a158d56",
+          "mode": "list",
+          "cachedResultName": "A&A Products — Inventory & Pipeline",
+          "cachedResultUrl": "https://app.notion.com/p/f2388a35b7a041e3a4ee89836a158d56"
+        },
+        "returnAll": true,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Status|select",
+              "condition": "equals",
+              "selectValue": "Ready"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -624,
+        80
+      ],
+      "id": "9098296c-03d6-42d4-9f70-8f0c0693f607",
+      "name": "Get Many - Ready Items",
+      "credentials": {
+        "notionApi": {
+          "id": "AWqFTDnuIu4yzlaH",
+          "name": "A&A Notion"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Get Many - Approved Items').item.json.id }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -608,
+        496
+      ],
+      "id": "afa27b3e-5807-4024-80f7-5ef69e12ab39",
+      "name": "Get a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "AWqFTDnuIu4yzlaH",
+          "name": "A&A Notion"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "f2388a35-b7a0-41e3-a4ee-89836a158d56",
+          "mode": "list",
+          "cachedResultName": "A&A Products — Inventory & Pipeline",
+          "cachedResultUrl": "https://app.notion.com/p/f2388a35b7a041e3a4ee89836a158d56"
+        },
+        "returnAll": true,
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Status|select",
+              "condition": "equals",
+              "selectValue": "Approved"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -800,
+        496
+      ],
+      "id": "892b52bd-2892-439a-9ff4-d10fc88d2268",
+      "name": "Get Many - Approved Items",
+      "credentials": {
+        "notionApi": {
+          "id": "AWqFTDnuIu4yzlaH",
+          "name": "A&A Notion"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Title",
+              "value": "AA Japan Surplus Pipeline"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"google/gemma-4-31b-it:free\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are the social media caption writer for A&A Household Appliances Trading, a Japan surplus store in Panabo City, Davao Region, Philippines. The brand name is \\\"Japan Surplus\\\" colloquially. You write Facebook post captions only — no other content.\\n\\nBRAND VOICE:\\n- Lead in Bisaya (Cebuano). Use English for specs and technical details. Mix naturally — do not translate everything.\\n- Warm, honest, community-first tone. Write like a trusted neighbour, not a salesperson.\\n- Never claim \\\"brand new.\\\" Never promise delivery, warranty, or installation.\\n- Be honest about condition. Condition vocabulary is fixed: Excellent, Good, Fair, Sold As-Is.\\n- One clear CTA per post. Never stack multiple CTAs.\\n\\nFORMAT RULES:\\n- Post Type A (Product Spotlight): lead with the item name and condition, give 2-3 key specs or selling points, end with \\\"DM to reserve\\\" phrased in Bisaya-led warmth.\\n- Post Type B (Batch Drop): announce the category, hint at variety and volume, end with \\\"DM for prices / inquire now\\\" phrased in Bisaya warmth.\\n- Post Type C (Container Arrival Teaser): build anticipation, do not list prices or specific items, end with \\\"Follow for updates + DM for first access.\\\"\\n- Post Type D (Styled Vignette): describe the grouped items as a lifestyle moment, end with \\\"DM to ask about any piece.\\\"\\n- Caption length: 60-120 words. Never exceed 150 words.\\n- Separate paragraphs with a blank line (two newlines). Aim for 2-3 short paragraphs, not one block.\\n- Emojis: 1-3 max, relevant, not decorative spam.\\n- Hashtags: 3-5 max at the end. Always include #JapanSurplus #PanaboCitySurplus. Add one hashtag matching the category (e.g. #Appliances, #Electronics, #Furniture, #KitchenAndDining, #Collectibles, #Clothing, #Tools, #SportsAndOutdoors, #AutoParts, #MediaAndStationery). Add one category-relevant tag.\\n\\nSPECIFICITY (IMPORTANT):\\n- Be specific and concrete. Use the real attributes given in Specs/Notes and Extra Info. Reference the actual item and its real features.\\n- Avoid generic filler like \\\"perfect for any home,\\\" \\\"great for any occasion,\\\" or \\\"just chilling at home.\\\" These are banned.\\n- If specs are sparse, lean into condition honesty and the Japan-surplus value angle (quality, tested, good find) rather than padding with vague claims.\\n\\nHARD RULES:\\n- Never mention delivery, shipping, or installation.\\n- Never use the word \\\"brand new\\\" or \\\"new\\\" to describe condition.\\n- Never promise anything about warranty or after-sales.\\n- Never make up specs not present in the input data. Only use what is given.\\n- Tested and working status goes in the caption naturally when condition is Excellent or Good. Do not add it for Fair or Sold As-Is.\\n\\nOUTPUT FORMAT (strict):\\nReturn the caption, then a line with exactly |||HERO|||, then the hero line. Nothing else. No markdown, no labels, no quotes.\\n\\nThe hero line must be a CATCHY, scroll-stopping 4-6 word hook in Bisaya or mixed Bisaya-English, ALL CAPS, no punctuation. It must NOT just repeat the item name. Examples of good hero lines: TUNOG NGA NINDOT DIRI · BAGONG ABOT GIKAN JAPAN · KUSINA UPGRADE NIMO DIRI · ABOT NA ANG PINAKANINDOT.\\n\\nExample output shape:\\n<caption text here>\\n|||HERO|||\\nBAGONG ABOT GIKAN JAPAN\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Item Name: {{ $json.property_item_name }}\\nBrand: {{ $json.property_brand }}\\nCategory: {{ $json.property_category }}\\nCondition: {{ $json.property_condition }}\\nPrice: PHP {{ $json.property_price }}\\nPost Type: {{ $json.property_post_type }}\\nDetails Type: {{ $json.property_details_type }}\\nSpecs / Notes: {{ $json.property_specs_notes }}\\nExtra Info: {{ $json.property_extra_info }}\"\n    }\n  ],\n  \"temperature\": 0.85,\n  \"max_tokens\": 500\n}",
+        "options": {
+          "response": {
+            "response": {}
+          },
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -400,
+        80
+      ],
+      "id": "81667293-8b55-4368-82ce-db843ee36550",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "4mDgA0cNxY0XQg6a",
+          "name": "OpenRouter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1008,
+        800
+      ],
+      "id": "08fd23f4-3653-48e6-b5ea-f803da4cc249",
+      "name": "Schedule Trigger2",
+      "retryOnFail": true,
+      "executeOnce": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "f2388a35-b7a0-41e3-a4ee-89836a158d56",
+          "mode": "list",
+          "cachedResultName": "A&A Products — Inventory & Pipeline",
+          "cachedResultUrl": "https://app.notion.com/p/f2388a35b7a041e3a4ee89836a158d56"
+        },
+        "limit": 1,
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Status|select",
+              "condition": "equals",
+              "selectValue": "Posted"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -800,
+        800
+      ],
+      "id": "53030147-44ae-4182-a7a5-a04af461cabc",
+      "name": "Get Many - Posted Items",
+      "credentials": {
+        "notionApi": {
+          "id": "AWqFTDnuIu4yzlaH",
+          "name": "A&A Notion"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "8511491097",
+        "file": "={{ $('Get Page').item.json.property_design_link }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Approve",
+                    "additionalFields": {
+                      "callback_data": "=approve__{{ $('Get Page').item.json.id }}"
+                    }
+                  },
+                  {
+                    "text": "❌ Reject",
+                    "additionalFields": {
+                      "callback_data": "=reject__{{ $('Get Page').item.json.id }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "caption": "=🆕 POST READY FOR APPROVAL 📦 \n```\n{{ $('Get Page').item.json.property_item_name }} 📝 {{ $('Get Page').item.json.property_generated_caption }} \n```\nTap a button to approve or reject."
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -208,
+        800
+      ],
+      "id": "3605d9ac-e47e-4116-bfd8-e0c8b457b361",
+      "name": "Send a photo message",
+      "webhookId": "14469117-a3db-4e9f-9580-eb605182ffa9",
+      "credentials": {
+        "telegramApi": {
+          "id": "dTtDsjQJJUrjJlYb",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Get Many - Posted Items').item.json.id }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -592,
+        800
+      ],
+      "id": "1942b290-e778-4978-936a-d714a346e989",
+      "name": "Get Page",
+      "credentials": {
+        "notionApi": {
+          "id": "AWqFTDnuIu4yzlaH",
+          "name": "A&A Notion"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Get Many - Posted Items').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Status|select",
+              "selectValue": "Pending Approval"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -400,
+        800
+      ],
+      "id": "2f6060f9-13eb-4321-aaa1-f57dc09e3b0c",
+      "name": "Pending Approval Status",
+      "credentials": {
+        "notionApi": {
+          "id": "AWqFTDnuIu4yzlaH",
+          "name": "A&A Notion"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1008,
+        1088
+      ],
+      "id": "c967e1f2-d360-45ff-a4fe-e15214af9aaa",
+      "name": "Telegram Trigger",
+      "webhookId": "a5c3afa3-4095-4761-961a-4e289e9af87b",
+      "credentials": {
+        "telegramApi": {
+          "id": "dTtDsjQJJUrjJlYb",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const callbackData = $input.first().json.callback_query.data;\nconst chatId = $input.first().json.callback_query.from.id;\nconst messageId = $input.first().json.callback_query.message.message_id;\n\n// Split \"approve__37fdabb9-...\" into [\"approve\", \"37fdabb9-...\"]\nconst [action, notionPageId] = callbackData.split(\"__\");\n\nreturn [{\n  json: {\n    action,           // \"approve\" or \"reject\"\n    notionPageId,     // the Notion page ID\n    chatId,           // for sending confirmation back\n    messageId,        // for editing the original message later\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        1088
+      ],
+      "id": "eee2206b-1be3-4034-9cb0-8633f419e998",
+      "name": "Code — Parse Callback"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0bb6b7c6-730e-49c5-a2e5-6878e79eaa32",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "approve",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -592,
+        1088
+      ],
+      "id": "489f3cf2-0daf-4272-abda-96dcc40819ee",
+      "name": "If approve"
+    },
+    {
+      "parameters": {
+        "url": "https://api.bufferapp.com/1/updates/create.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "bufferApi",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "profile_ids[]",
+              "value": "6a2e52c738b557934593831c"
+            },
+            {
+              "name": "text",
+              "value": "={{ $('Get page').item.json.property_generated_caption }}"
+            },
+            {
+              "name": "media[photo]",
+              "value": "={{ $('Get page').item.json.property_design_link }}"
+            },
+            {
+              "name": "scheduled_at",
+              "value": "={{ $('Code - Pick next time slot').item.kson.scheduledAt }}"
+            },
+            {
+              "name": "now",
+              "value": "false"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        944,
+        1072
+      ],
+      "id": "aa9e111f-9e3c-455e-a7f2-ffd662f0ef52",
+      "name": "HTTP Request2",
+      "credentials": {
+        "bufferApi": {
+          "id": "ZlFqXRvmXsZtunUP",
+          "name": "Buffer ACCOUNT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Code — Parse Callback').item .json.notionPageId}}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -176,
+        992
+      ],
+      "id": "79c5b2be-62f8-42e6-8817-ea23a556c886",
+      "name": "Get page",
+      "credentials": {
+        "notionApi": {
+          "id": "AWqFTDnuIu4yzlaH",
+          "name": "A&A Notion"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date();\nconst manila = new Date(now.toLocaleString(\"en-US\", { timeZone: \"Asia/Manila\" }));\nconst hour = manila.getHours();\nconst minute = manila.getMinutes();\n\nconst slots = [9, 12, 20]; // 9am, 12pm, 8pm\n\n// Find next slot strictly after current time\nlet targetHour = slots.find(h => h > hour || (h === hour && minute === 0));\nlet targetDate = new Date(manila);\n\nif (!targetHour) {\n  // All slots passed today — schedule for 9am tomorrow\n  targetHour = 9;\n  targetDate.setDate(targetDate.getDate() + 1);\n}\n\ntargetDate.setHours(targetHour, 0, 0, 0);\n\n// Buffer expects UTC Unix timestamp\n// Manila is UTC+8\nconst utcTimestamp = Math.floor(targetDate.getTime() / 1000) - (8 * 3600);\n\nconst readableTime = targetDate.toLocaleString(\"en-PH\", {\n  timeZone: \"Asia/Manila\",\n  dateStyle: \"medium\",\n  timeStyle: \"short\"\n});\n\nreturn [{\n  json: {\n    ...($input.first().json),   // carry notionPageId + chatId forward\n    scheduledAt: utcTimestamp,\n    readableTime,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        992
+      ],
+      "id": "5536c9b4-d83d-40ec-a2ac-3c428c377c4f",
+      "name": "Code - Pick next time slot"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v25.0/1120146347845726/feed",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $('Get page').item.json.property_generated_caption }}"
+            },
+            {
+              "name": "attached_media[0]",
+              "value": "={\"media_fbid\":\"{{ $('Upload Photo to Facebook').item.json.id }}\"}"
+            },
+            {
+              "name": "scheduled_publish_time",
+              "value": "={{ $('Code - Pick next time slot').item.json.scheduledAt }}"
+            },
+            {
+              "name": "published",
+              "value": "false"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        240,
+        992
+      ],
+      "id": "8822df33-9283-4602-beef-0e510b69687d",
+      "name": "Create Scheduled Post",
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "YoX4qUo2BHKdKbBE",
+          "name": "Facebook Graph API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v25.0/1120146347845726/photos",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $('Get page').item.json.property_design_link }}"
+            },
+            {
+              "name": "published",
+              "value": "false"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        992
+      ],
+      "id": "c15c8281-9c44-4e06-a578-2a5cb97bacd7",
+      "name": "Upload Photo to Facebook",
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "YoX4qUo2BHKdKbBE",
+          "name": "Facebook Graph API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Code — Parse Callback').item.json.notionPageId }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Status|select",
+              "selectValue": "Published"
+            },
+            {
+              "key": "Scheduled Date|date",
+              "date": "={{ $('Code - Pick next time slot').item.json.readableTime }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        992
+      ],
+      "id": "8fa2fff9-b308-4f8f-a75a-00d1159feed2",
+      "name": "Update a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "AWqFTDnuIu4yzlaH",
+          "name": "A&A Notion"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Code — Parse Callback').item.json.notionPageId }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Status|select",
+              "selectValue": "Rejected"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        1184
+      ],
+      "id": "67d0543c-e782-4214-b988-bb809b900c15",
+      "name": "Update a database page1",
+      "credentials": {
+        "notionApi": {
+          "id": "AWqFTDnuIu4yzlaH",
+          "name": "A&A Notion"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Code — Parse Callback').item.json.chatId }}",
+        "text": "❌ Post rejected.  Row marked Rejected in Notion. Edit and reset to Ready when you want to retry.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -176,
+        1184
+      ],
+      "id": "6c6e3d24-8dba-4465-a8aa-f05647a3ee00",
+      "name": "Sends Rejected Message",
+      "webhookId": "770aa3bb-37a2-4c04-ac7e-895f35b919f1",
+      "credentials": {
+        "telegramApi": {
+          "id": "dTtDsjQJJUrjJlYb",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Code — Parse Callback').item.json.chatId }}",
+        "text": "=✅ Post scheduled!  📦 {{ $('Get page') }} 🕐 {{ $('Code - Pick next time slot').item.json.readableTime }}  Check Facebook Creator Studio to confirm.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        656,
+        992
+      ],
+      "id": "d58c4de5-e7d4-49c0-b2be-9e2a2aefd730",
+      "name": "Sends Successfull Message",
+      "webhookId": "c041eebc-bab1-47ab-89a3-db9b69bdd5ec",
+      "credentials": {
+        "telegramApi": {
+          "id": "dTtDsjQJJUrjJlYb",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Code — Parse Callback": [
+      {
+        "json": {
+          "action": "approve",
+          "notionPageId": "37fdabb9-e723-8020-b6ee-dd14e72120f2",
+          "chatId": 8511491097,
+          "messageId": 12345
+        }
+      }
+    ]
+  },
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "Error Catch": {
+      "main": [
+        [
+          {
+            "node": "Telegram — error notify",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Gemini response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Status = Completed": {
+      "main": [
+        [
+          {
+            "node": "Notion — write render URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - template selector": {
+      "main": [
+        [
+          {
+            "node": "HTTP — Templated render",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP — Templated render": {
+      "main": [
+        [
+          {
+            "node": "If Status = Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Gemini response": {
+      "main": [
+        [
+          {
+            "node": "Write generatedCaption",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Many - Ready Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Get Many - Approved Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Many - Ready Items": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a database page": {
+      "main": [
+        [
+          {
+            "node": "Code - template selector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Many - Approved Items": {
+      "main": [
+        [
+          {
+            "node": "Get a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Error Catch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger2": {
+      "main": [
+        [
+          {
+            "node": "Get Many - Posted Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Many - Posted Items": {
+      "main": [
+        [
+          {
+            "node": "Get Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Page": {
+      "main": [
+        [
+          {
+            "node": "Pending Approval Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pending Approval Status": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code — Parse Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — Parse Callback": {
+      "main": [
+        [
+          {
+            "node": "If approve",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If approve": {
+      "main": [
+        [
+          {
+            "node": "Code - Pick next time slot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update a database page1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get page": {
+      "main": [
+        [
+          {
+            "node": "Upload Photo to Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Pick next time slot": {
+      "main": [
+        [
+          {
+            "node": "Get page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        []
+      ]
+    },
+    "Upload Photo to Facebook": {
+      "main": [
+        [
+          {
+            "node": "Create Scheduled Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Scheduled Post": {
+      "main": [
+        [
+          {
+            "node": "Update a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a database page": {
+      "main": [
+        [
+          {
+            "node": "Sends Successfull Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a database page1": {
+      "main": [
+        [
+          {
+            "node": "Sends Rejected Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ff01a9ef-47e4-4d67-9ae9-360d651b4c25",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "aa47e1f908446388f47d6187b68534a4ee684aac244c465fd8e4d659b22a5f2d"
+  },
+  "nodeGroups": [],
+  "id": "mrv0K7ryTsEl1z5v",
+  "tags": []
+}
