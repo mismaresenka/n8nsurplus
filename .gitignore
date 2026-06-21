@@ -4,6 +4,9 @@
 *.key
 *.pem
 
+# DB dumps (contain encrypted credentials, e.g. the migration backup) — never commit
+*.sql
+
 # Podman/Docker runtime files
 .podman/
 .docker/
